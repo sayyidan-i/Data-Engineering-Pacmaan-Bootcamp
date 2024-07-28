@@ -1,0 +1,16 @@
+INSERT INTO customer 
+VALUES  (DEFAULT, 'herrod_st', 'Herrod', 'Stanley','eu.odio@google.net','1-591-361-5331'),
+  (DEFAULT, 'Graiden56', 'Graiden', 'Curry','tristique.aliquet@hotmail.net','(171) 284-4262'),
+  (DEFAULT, 'finnbird', 'Finn', 'Bird','id@protonmail.edu','1-827-726-5896'),
+  (DEFAULT, 'd_maddox', 'Driscoll', 'Maddox', 'sodales.nisi@yahoo.com', '1-734-441-6181'),
+  (DEFAULT, 'meli_murray', 'Melanie', 'Murray', 'hendrerit@hotmail.net', '1-291-668-4536'),
+  (DEFAULT, 'elieelie4', 'Keelie', 'Oneil','duis.at.lacus@hotmail.com','1-879-571-6862'),
+  (DEFAULT, 'amayanun','Amaya', ' Nunez','sed.sapien.nunc@yahoo.com','1-185-715-5481'),
+  (DEFAULT, 'sandra78','Lysandra', ' Winters','a.auctor@yahoo.com','1-718-673-6331'),
+  (DEFAULT, 'lois_thopmson','Lois', ' Thompson','donec.est@outlook.net','1-387-325-4422'),
+  (DEFAULT, 'sam_like','Samson', ' Dorsey','lectus.pede.ultrices@icloud.net','(418) 189-6879'),
+  (DEFAULT, 'larissa923', 'Larissa', ' Fulton','ut.ipsum.ac@google.ca','(898) 512-1363'),
+  (DEFAULT, 'ppeters', 'Patience', ' Peters','lobortis.quis@icloud.ca','(898) 467-7598'),
+  (DEFAULT, 'gannon_roach', 'Gannon', ' Roach','duis.cursus@icloud.com','1-381-210-2317'),
+  (DEFAULT, 'yoshinew', 'Yoshi', ' Haley','natoque.penatibus@icloud.net','(855) 529-9158'),
+  (DEFAULT, 'cedric_huff', 'Cedric', ' Marks','litora.torquent@hotmail.net','(398) 718-4154');

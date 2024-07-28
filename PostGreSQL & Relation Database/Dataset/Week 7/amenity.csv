@@ -1,0 +1,4 @@
+amenity_id,room_type_id,bed_type,size,air_conditioner,refrigerator,microwave,coffe_machine,television,jacuzzi
+1,1,"Twin","6x4 m",TRUE,TRUE,TRUE,FALSE,TRUE,FALSE
+2,2,"Queen","7x4 m",TRUE,TRUE,TRUE,TRUE,TRUE,FALSE
+3,3,"King","10x5 m",TRUE,TRUE,TRUE,TRUE,TRUE,TRUE

@@ -1,0 +1,9 @@
+product_category_id, name, description
+1, 'Shirt', 'A shirt is a piece of clothing worn on the upper part of your body with a collar, sleeves, and buttons down the front.',
+2, 'T-shirt','T-shirt has short sleeves and a round neckline, known as a crew neck, which lacks a collar.',
+3, 'Trousers', 'Trouser is an outer garment covering the lower half of the body from the waist to the ankles and divided into sections to cover each leg separately',
+4, 'Skirt', ' A skirt is the lower part of a dress or a separate outer garment that covers a person from the waist downwards.',
+5, 'Outwear', 'Outerwear is clothing and accessories worn outdoors, or clothing designed to be worn outside other garments',
+6, 'Hat', ' Hat is a covering for the head usually having a shaped crown and brim',
+7, 'Sandal', 'type of footwear consisting of a sole secured to the foot by straps over the instep, toes, or ankle.'
+
