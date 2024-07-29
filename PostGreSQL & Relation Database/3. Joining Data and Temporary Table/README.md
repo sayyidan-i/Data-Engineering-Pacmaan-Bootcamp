@@ -91,3 +91,241 @@ Sub Query adalah query yang berada di dalam query lain. Sub Query dapat digunaka
     Dengan demikian, Sub Query dapat ditempatkan pada:
     - Klausa `WHERE` sebagai parameter filter
     - Klausa `FROM` / `JOIN` sebagai tabel acuan
+
+
+    Syntax Sub Query:
+    ```sql
+    SELECT nama_kolom, fungsi_agregat(nama_kolom)
+    FROM (sub-quary) AS alias
+    JOIN table_2
+    ON alias.column_name = table_2.column_name
+    WHERE condition (sub-query)
+    GROUP BY nama_kolom
+    HAVING kondisi
+    ORDER BY nama_kolom
+    LIMIT jumlah_baris
+    ```
+
+    ## Common Table Expression (CTE)
+
+    Sub Query dapat membuat query terlihat kompleks sehingga readability menjadi menurun. Untuk mengurangi kompleksitas, kita dapat menggunakan `Common Table Expression` (CTE). CTE adalah query yang didefinisikan sebelum query utama dan dapat digunakan sebagai tabel sementara.
+
+    ```sql
+
+    WITH nama_alias AS (
+        SELECT column_name(s)
+        FROM table_name
+        WHERE condition
+    )
+
+    ```
+
+    Contoh kasus
+    - Perusahaan ingin memberikan diskon khusus kepada user yang __total transaksinya__ diatas rata-rata. Untuk itu perusahaan membutuhkan informasi nama, email, dan total transaksi dari user-user tersebut.
+
+    ![alt text](image-4.png)
+
+    1. Membuat tabel CTE total transaksi dari tiap customer
+
+        ```sql
+        WITH total_transaction AS (
+            SELECT payments.id_customer, SUM(jumlah_pembayaran) AS jumlah_pembayaran
+            FROM payments
+            JOIN customer2
+            ON payments.id_customer = customer2.id_customer
+            GROUP BY payments.id_customer
+        )
+    
+    2. Menggabungkan tabel total transaksi dengan tabel customer untuk mendapatkan informasi nama dan alamat email
+
+        ```sql
+        SELECT nama_customer, email, jumlah_pembayaran
+        FROM total_transaction
+        JOIN customer2
+        ON total_transaction.id_customer = customer2.id_customer
+        WHERE jumlah pembayaran < (SELECT AVG(jumlah_pembayaran) FROM total_transaction);
+        ```
+
+
+## Temporary Table
+
+Keterbatasan CTE
+
+- CTE hanya dapat dipanggil pada query tersebut
+- Kurang efektif jika tabel hasil query akan diakses banyak query lainnya.
+
+Temporary Table
+- Temporary Table adalah tabel sementara yang dibuat untuk menyimpan hasil query.
+    
+- Namun tabel temporer hanya dapat diakses selama satu sesi login saja
+
+
+Contoh kasus yang sama
+
+Perusahan ingin memberikan hadiah kepada user yang total transaksinya diatas rata-rata. Untuk itu perusahaan membutuhkan informasi nama, email, dan total transaksi dari user-user tersebut.
+
+
+1. Membuat tabel tempoper total transaksi dari tiap customer
+
+        ```sql
+        CREATE TEMPORARY TABLE total_transaction AS (
+            SELECT payments.id_customer, SUM (jumlah_pembayaran) AS jumlah_pembayaran
+            FROM payments
+            JOIN customer2
+            ON payments.id_customer = customer2.id_customer
+            GROUP BY payments.id_customer
+        )
+
+        > Kita dapaat mengecek apakah tabel temporer sudah dibuat dengan perintah SELECT * nama_tabel
+
+ 2. Membuat tabel temporer rata-rata total transaksi dari tiap customer
+
+        ```sql
+        CREATE TEMPORARY TABLE avg_transac AS
+        SELECT AVG(jumlah_pembayaran) AS avg_transaksi
+        FROM total_transaction;
+        ```
+
+3. Menggabungkan tabel total transaksi dengan tabel customer untuk mendapatkan informasi nama dan email
+
+        ```sql
+        SELECT nama_customer, email, jumlah_pembayaran
+        FROM total_transaction
+        JOIN customers2
+        ON total_transaction.id_customer = customers2.id_customer
+        WHERE jumlah_pembayaran > (SELECT * FROM avg_transac);
+        ```
+
+
+## Latihan
+
+### Overview
+
+Toko Cars merupakan toko mainan miniatur kendaraan. Toko tersebut memiliki database yang menyimpan informasi mengenai proses bisnis tokonya. Pemilik toko ingin menganalisis database yang dipunyai tersebut.
+
+### ERD DATABASE
+
+![alt text](image-5.png)
+
+CASE 1
+
+1. Toko berencana membuat strategi untuk mempercepat penjualan barang yang belum laku sama sekali lewat skema diskon. Karena itu, Pemilik toko meminta anda untuk mencari data barang yang belum pernah dibeli oleh customer.
+
+    - Lihat tabel mana yang memiliki informasi nama barang dan terjual
+    - Tabel `products` memiliki informasi nama barang dan tabel `order_details` memiliki informasi barang yang terjual
+
+    ```sql
+    SELECT 
+        productname, 
+        productline,
+        quantityordered
+    FROM products
+    LEFT JOIN orderdetails
+    ON products.productcode = orderdetails.productcode
+    WHERE quantityordered IS NULL;
+
+    ```
+
+2. Melanjutkan strategi penjualan dengan skema diskon. Pemilik toko juga akan memberikan diskon untuk produk yang persentase jumlah penjualannya dibawah 30% dari total stock yang ada. Carilah barang yang persentase terjualnya kurang dari 30% dari total stock yang ada. total stok = stok saat ini + jumlah terjual
+
+    - Tabel yang memiliki informasi jumlah stok dan jumlah terjual adalah tabel `products` dan `orderdetails`
+    - hotung setiap stok terjual berapa
+    - hitung total stok
+    - hitung persentase terjual
+    - filter barang yang persentase terjualnya kurang dari 30%
+
+
+    - buat temp tabel untuk menyimpan total order dari setiap produk
+
+    ```sql
+    CREATE TEMPORARY TABLE totalordered AS
+	SELECT productcode, SUM(quantityordered) as totalquantityordered
+	FROM orderdetails
+	GROUP BY productcode;
+    ```
+
+    - buat temp tabel untuk menyimpan total stock dari setiap produk
+
+    ```sql
+    CREATE TEMPORARY TABLE totalstock AS
+    SELECT pro.productcode, tts.totalquantityordered, pro.quantityinstock + tts.totalquantityordered AS total_stock
+    FROM products AS pro
+    LEFT JOIN totalordered AS tts
+    ON pro.productcode = tts.productcode;
+    ```
+
+    - hitung persentase terjual dan filter barang yang persentase terjualnya kurang dari 30%
+
+    ```sql
+    SELECT 
+	    pro.productname, 
+        pro.productline, 
+        tts.totalquantityordered, 
+        tts.total_stock, 
+	    (CAST(tts.totalquantityordered AS FLOAT) / CAST(tts.total_stock AS FLOAT)) * 100 AS orderpercentage
+    FROM products pro
+    JOIN totalstock tts
+	    ON pro.productcode = tts.productcode
+    WHERE tts.totalquantityordered / tts.total_stock * 100 < 30
+    ORDER BY orderpercentage;
+    ```
+
+    ![alt text](image-8.png)
+    - terdapat 83 item yang persentase terjualnya kurang dari 30%
+
+- Kebijakan toko yang baru menetapkan bahwa harga jual minimum penjualan tiap produk adalah 20% dibawah MSRP. Pemilik toko ingin mengetahui apakah terdapat produk yang telah dijual dibawah harga minimum tersebut
+
+    - bikin tabel baru untuk menyimpan harga jual minimum dari setiap produk di orderdetails
+    - join tabel baru dengan products
+    - filter produk yang harga jualnya kurang dari 20% dibawah MSRP
+
+    ```sql
+    CREATE TEMPORARY TABLE minprice AS
+    SELECT productcode, MIN(priceeach) AS sellprice
+    FROM orderdetails
+    GROUP BY productcode;
+    ```
+
+    ```sql
+    SELECT 
+	productname, 
+	productline, 
+	msrp, 
+	0.8*msrp AS minsellprice, 
+    sellprice
+    FROM products
+    LEFT JOIN minprice
+    ON products.productcode = minprice.productcode
+    WHERE sellprice < 0.8*msrp
+    ORDER BY sellprice;
+    ```
+
+    ![alt text](image-6.png)
+    - terdapat 28 item yang sempat dijual dengan harga dibawah minimal yang ditetapkan
+
+
+- Dari penjualan yang telah dilakukan, pemilik toko ingin mengetahui kategori produk mana yang penjualannya di atas rata-rata. (dalam latihan ini yang digunakan adalah kuantitas penjualan bukan harga)
+
+    - gabungkan tabel product dan orderdetail dan buat tabel untuk mencari total penjualan dari setiap kategori produk.
+    - hitung rata-rata semua penjualan
+    - filter kategori produk yang penjualannya diatas rata-rata
+
+    ```sql
+    CREATE TEMPORARY TABLE kategoriproduk AS
+    SELECT 
+        products.productline, 
+        SUM(orderdetails.quantityordered)
+    FROM products
+    LEFT JOIN orderdetails
+    ON products.productcode = orderdetails.productcode
+    GROUP BY products.productline;
+    ```
+
+    ```sql
+    SELECT 
+        productline,
+        sum
+    FROM kategoriproduk
+    WHERE sum > (SELECT avg(sum) FROM kategoriproduk)
+    ```
+
