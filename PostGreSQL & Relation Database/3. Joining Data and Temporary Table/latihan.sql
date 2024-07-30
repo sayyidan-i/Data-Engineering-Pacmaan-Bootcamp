@@ -107,3 +107,59 @@ FROM kategoriproduk
 WHERE sum > (SELECT avg(sum) FROM kategoriproduk)
 
 
+-- CASE 2
+-- Berapa rata-rata payment yang dilakukan oleh customer
+
+
+CREATE TEMPORARY TABLE avgAmountEachCustomer AS
+SELECT customernumber, AVG(amount) as avgamountspent
+FROM payments
+GROUP BY customernumber;
+
+SELECT customername, phone, city, state, country, avgamountspent
+FROM customers
+JOIN avgAmountEachCustomer
+ON customers.customernumber = avgAmountEachCustomer.customernumber
+ORDER BY avgamountspent DESC;
+
+
+SELECT ctm.customername, prd.productname, SUM(quantityordered)
+FROM orderdetails ordd
+JOIN orders ord
+	ON ordd.ordernumber = ord.ordernumber
+JOIN customers ctm
+	ON ctm.customernumber = ord.customernumber
+JOIN products prd
+	ON prd.productcode = ordd.productcode
+GROUP BY customername, productname;
+
+WITH totalpaymentpercustomer AS (
+	SELECT customernumber, SUM(amount) as totalpayment
+	FROM payments
+	GROUP BY 1
+)
+
+SELECT customername, country, totalpayment
+FROM customers
+JOIN totalpaymentpercustomer
+USING (customernumber)
+WHERE totalpayment > (SELECT AVG(totalpayment) FROM totalpaymentpercustomer);
+
+WITH salestotalsales AS (
+	SELECT salesrepemployeenumber, SUM(quantityordered*priceeach) AS totalsales
+	FROM customers
+	JOIN orders
+		USING (customernumber)
+	JOIN orderdetails
+		USING (ordernumber)
+	WHERE EXTRACT (YEAR FROM orderdate) = 2004 AND status = 'Shipped'
+	GROUP BY 1
+	ORDER BY 2 DESC
+	LIMIT 5
+)
+
+SELECT CONCAT(firstname, ' ', lastname) employeeName, email, totalsales
+FROM employees
+JOIN salestotalsales
+	ON employees.employeenumber = salestotalsales.salesrepemployeenumber
+ORDER BY 3 DESC;

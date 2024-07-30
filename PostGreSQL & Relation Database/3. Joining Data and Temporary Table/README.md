@@ -273,7 +273,7 @@ CASE 1
     ![alt text](image-8.png)
     - terdapat 83 item yang persentase terjualnya kurang dari 30%
 
-- Kebijakan toko yang baru menetapkan bahwa harga jual minimum penjualan tiap produk adalah 20% dibawah MSRP. Pemilik toko ingin mengetahui apakah terdapat produk yang telah dijual dibawah harga minimum tersebut
+3. Kebijakan toko yang baru menetapkan bahwa harga jual minimum penjualan tiap produk adalah 20% dibawah MSRP. Pemilik toko ingin mengetahui apakah terdapat produk yang telah dijual dibawah harga minimum tersebut
 
     - bikin tabel baru untuk menyimpan harga jual minimum dari setiap produk di orderdetails
     - join tabel baru dengan products
@@ -304,7 +304,7 @@ CASE 1
     - terdapat 28 item yang sempat dijual dengan harga dibawah minimal yang ditetapkan
 
 
-- Dari penjualan yang telah dilakukan, pemilik toko ingin mengetahui kategori produk mana yang penjualannya di atas rata-rata. (dalam latihan ini yang digunakan adalah kuantitas penjualan bukan harga)
+4. Dari penjualan yang telah dilakukan, pemilik toko ingin mengetahui kategori produk mana yang penjualannya di atas rata-rata. (dalam latihan ini yang digunakan adalah kuantitas penjualan bukan harga, berbeda dengan contoh)
 
     - gabungkan tabel product dan orderdetail dan buat tabel untuk mencari total penjualan dari setiap kategori produk.
     - hitung rata-rata semua penjualan
@@ -329,3 +329,99 @@ CASE 1
     WHERE sum > (SELECT avg(sum) FROM kategoriproduk)
     ```
 
+
+CASE 2
+
+Kali ini pemilik toko ingin mengetahui perilaku konsumen dalam bertransaksi di toko tersebut. 
+
+1. Pertama dia ingin mengetahui `berapa rata-rata payments yang dilakukan oleh tiap customers?`
+
+    - dari tabel payments, hitung rata-rata dari total pembayaran yang dilakukan oleh tiap customer
+    - Gabungkan tabel dengan informasi customer dengan tabel yang dibuat sebelumnya
+
+    ```sql
+    CREATE TEMPORARY TABLE avgAmountEachCustomer AS
+    SELECT customernumber, AVG(amount) as avgamountspent
+    FROM payments
+    GROUP BY customernumber;
+
+    SELECT customername, phone, city, state, country, avgamountspent
+    FROM customers
+    JOIN avgAmountEachCustomer
+    ON customers.customernumber = avgAmountEachCustomer.customernumber
+    ORDER BY avgamountspent DESC;
+    ```
+
+    ![alt text](image-10.png)
+
+2. Pemilik toko ingin melihat produk apa saja yang telah di order oleh setiap customer dan berapa banyak kuantitas produk tersebut saat diorder?
+
+    - Informasi customer ada di tabel customers
+    - Informasi order ada di tabel orders
+    - Informasi kode produk yang di order ada di orderdetails
+    - informasi produk ada di table products
+    - gabungkan tabel customers, orders, orderdetails, dan products
+
+    ```sql
+    SELECT ctm.customername, prd.productname, quantityordered
+    FROM orderdetails ordd
+    JOIN orders ord
+        ON ordd.ordernumber = ord.ordernumber
+    JOIN customers ctm
+        ON ctm.customernumber = ord.customernumber
+    JOIN products prd
+        ON prd.productcode = ordd.productcode
+    GROUP BY customername, productname
+    ```
+    ![alt text](image-12.png)
+
+3. Pemilik toko ingin melihat seberapa baik penjualan yang ada di Asia-Australia. Ia meminta untuk mencari customer yang total payments-nya di atas rata-rata total payments tiap customer dan customer tersebut berasal dari negara New Zealand, Australia, Singapore, Japan, Hong Kong, Philippines
+
+    - rata-rata dari semua customer atau dari customer asia-australia aja? dalam  kasus ini kita pakai dari semuanya aja
+    - cari total payments dari tiap customer
+    - itung rata-rata total payments
+    - filter customer yang total paymentsnya diatas rata-rata dan berasal dari negara yang diminta
+  
+    ```sql
+    WITH totalpaymentpercustomer AS (
+	SELECT customernumber, SUM(amount) as totalpayment
+	FROM payments
+	GROUP BY 1
+    )
+
+    SELECT customername, country, totalpayment
+    FROM customers
+    JOIN totalpaymentpercustomer
+    USING (customernumber)
+    WHERE totalpayment > (SELECT AVG(totalpayment) FROM totalpaymentpercustomer);
+    ```
+
+
+4. Untuk mengapresiasi penjualan yang telah dilakukan oleh toko selama 2004, pemilik toko berencana memberikan bonus pada top 5 pegawai yang menghasilkan sales terbanyak di tahun 2004. Dan pastikan status order barang shipped
+
+    - sales terbanyak berarti quantity ordered terbanyak kan
+    - join employee dengan customer, orders, and orderdetails
+    - bikin tabel baru dulu gasih buat total quantity ordered dari setiap sales, ekstrak tahun 2004, status shipped
+
+    ```sql
+    WITH salestotalsales AS (
+	SELECT salesrepemployeenumber, SUM(quantityordered*priceeach) AS totalsales
+	FROM customers
+	JOIN orders
+		USING (customernumber)
+	JOIN orderdetails
+		USING (ordernumber)
+	WHERE EXTRACT (YEAR FROM orderdate) = 2004 AND status = 'Shipped'
+	GROUP BY 1
+	ORDER BY 2 DESC
+	LIMIT 5
+    )
+
+    SELECT CONCAT(firstname, ' ', lastname) employeeName, email, totalsales
+    FROM employees
+    JOIN salestotalsales
+        ON employees.employeenumber = salestotalsales.salesrepemployeenumber
+    ORDER BY 3 DESC;
+    ```
+
+    
