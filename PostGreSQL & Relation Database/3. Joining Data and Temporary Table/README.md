@@ -106,9 +106,9 @@ Sub Query adalah query yang berada di dalam query lain. Sub Query dapat digunaka
     LIMIT jumlah_baris
     ```
 
-    ## Common Table Expression (CTE)
+## Common Table Expression (CTE)
 
-    Sub Query dapat membuat query terlihat kompleks sehingga readability menjadi menurun. Untuk mengurangi kompleksitas, kita dapat menggunakan `Common Table Expression` (CTE). CTE adalah query yang didefinisikan sebelum query utama dan dapat digunakan sebagai tabel sementara.
+   Sub Query dapat membuat query terlihat kompleks sehingga readability menjadi menurun. Untuk mengurangi kompleksitas, kita dapat menggunakan `Common Table Expression` (CTE). CTE adalah query yang didefinisikan sebelum query utama dan dapat digunakan sebagai tabel sementara.
 
     ```sql
 
@@ -120,14 +120,14 @@ Sub Query adalah query yang berada di dalam query lain. Sub Query dapat digunaka
 
     ```
 
-    Contoh kasus
+   Contoh kasus
     - Perusahaan ingin memberikan diskon khusus kepada user yang __total transaksinya__ diatas rata-rata. Untuk itu perusahaan membutuhkan informasi nama, email, dan total transaksi dari user-user tersebut.
 
-    ![alt text](image-4.png)
+   ![alt text](image-4.png)
 
-    1. Membuat tabel CTE total transaksi dari tiap customer
+1. Membuat tabel CTE total transaksi dari tiap customer
 
-        ```sql
+     ```sql
         WITH total_transaction AS (
             SELECT payments.id_customer, SUM(jumlah_pembayaran) AS jumlah_pembayaran
             FROM payments
@@ -135,16 +135,17 @@ Sub Query adalah query yang berada di dalam query lain. Sub Query dapat digunaka
             ON payments.id_customer = customer2.id_customer
             GROUP BY payments.id_customer
         )
+    ```
     
-    2. Menggabungkan tabel total transaksi dengan tabel customer untuk mendapatkan informasi nama dan alamat email
+2. Menggabungkan tabel total transaksi dengan tabel customer untuk mendapatkan informasi nama dan alamat email
 
-        ```sql
+    ```sql
         SELECT nama_customer, email, jumlah_pembayaran
         FROM total_transaction
         JOIN customer2
         ON total_transaction.id_customer = customer2.id_customer
         WHERE jumlah pembayaran < (SELECT AVG(jumlah_pembayaran) FROM total_transaction);
-        ```
+     ```
 
 
 ## Temporary Table
